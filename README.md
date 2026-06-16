@@ -6,7 +6,7 @@ A fast, local-first project board for your Obsidian vault. Plain Markdown goes i
 
 ## Why I built it
 
-I've been a passionate Obsidian user for five years, but I live in Jira at work. Every time I opened my vault I wished my own projects felt as fast and as good to work in as the board I stare at all day. Obsidian's Project Manager plugin gave me real projects and tasks inside my notes; I wanted to give those tasks the interface they deserved. So I built it, directly on top of the Markdown files I already had.
+I've been a passionate Obsidian user for five years, but at work I live in Jira-grade project management tools: the fast, polished boards big teams run on. Every time I opened my vault I wished my own projects felt that good to work in. Obsidian's Project Manager plugin gave me real projects and tasks inside my notes; I wanted to give those tasks the interface they deserved. So I built it, directly on top of the Markdown files I already had.
 
 ## Quick start
 
