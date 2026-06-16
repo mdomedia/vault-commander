@@ -1,7 +1,7 @@
 {
   "name": "vault-commander",
   "version": "0.9.0",
-  "description": "Local-first, Jira-grade project board for your Obsidian vault. Plain Markdown in, beautiful board out — nothing leaves your machine.",
+  "description": "Local-first, Jira-grade project board for your Obsidian vault. Plain Markdown in, beautiful board out, nothing leaves your machine.",
   "homepage": "https://vaultcommander.app",
   "repository": {
     "type": "git",
