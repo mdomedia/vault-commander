@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault Commander</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="app-logo">
+        <svg class="app-logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" fill="currentColor" opacity="0.15"/>
+          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="app-name">Vault Commander</span>
+      </div>
+      <nav class="view-tabs" role="tablist">
+        <button class="view-tab active" data-view="dashboard" role="tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </button>
+        <button class="view-tab" data-view="kanban" role="tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="15" y="3" width="6" height="12" rx="1"/></svg>
+          Kanban
+        </button>
+        <button class="view-tab" data-view="table" role="tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          Table
+        </button>
+        <button class="view-tab" data-view="timeline" role="tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h4M9 6h8M3 12h8M13 12h4M3 18h6M11 18h6"/></svg>
+          Timeline
+        </button>
+        <button class="view-tab" data-view="focus" role="tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+          Focus
+        </button>
+      </nav>
+    </div>
+    <div class="header-right">
+      <div class="stat-pills" id="stat-pills"></div>
+      <button class="icon-btn" id="mode-toggle" title="Switch appearance">
+        <span class="mode-icon">☀️</span>
+      </button>
+      <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="btn-primary" id="btn-new-task">+ New Task</button>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-bar-left">
+      <div class="project-chips" id="project-chips"></div>
+      <button class="chip-add" id="btn-new-project" title="New project">+ Project</button>
+    </div>
+    <div class="filter-bar-right">
+      <label class="filter-check"><input type="checkbox" id="filter-done"> Show done</label>
+      <label class="filter-check"><input type="checkbox" id="filter-deferred"> Show deferred</label>
+      <label class="filter-check"><input type="checkbox" id="filter-cancelled"> Show cancelled</label>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Search tasks..." autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- View Container -->
+  <main class="view-container" id="view-container"></main>
+
+  <!-- Detail Panel Backdrop -->
+  <div class="detail-backdrop" id="detail-backdrop"></div>
+
+  <!-- Detail Panel -->
+  <aside class="detail-panel" id="detail-panel">
+    <button class="detail-close" id="detail-close" aria-label="Close">&times;</button>
+    <div class="detail-content" id="detail-content"></div>
+  </aside>
+
+  <!-- Create Task Modal Backdrop -->
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+
+  <!-- Create Task Modal -->
+  <div class="modal" id="create-modal">
+    <div class="modal-header">
+      <h2>New Task</h2>
+      <button class="detail-close" id="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <form id="create-form" autocomplete="off">
+      <div class="form-group">
+        <label for="create-title">Title <span class="required">*</span></label>
+        <input type="text" id="create-title" required placeholder="What needs to be done?">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="create-project">Project</label>
+          <select id="create-project"></select>
+        </div>
+        <div class="form-group">
+          <label for="create-priority">Priority</label>
+          <select id="create-priority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="create-due">Due Date</label>
+          <input type="date" id="create-due">
+        </div>
+        <div class="form-group">
+          <label for="create-status">Status</label>
+          <select id="create-status">
+            <option value="todo">To Do</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+            <option value="review">Review</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="create-body">Description</label>
+        <textarea id="create-body" rows="4" placeholder="Optional details..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="create-cancel">Cancel</button>
+        <button type="submit" class="btn-primary">Create Task</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div class="modal" id="project-modal">
+    <div class="modal-header">
+      <h2>New Project</h2>
+      <button class="detail-close" id="project-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <form id="project-form" autocomplete="off">
+      <div class="form-group">
+        <label for="project-title">Name <span class="required">*</span></label>
+        <input type="text" id="project-title" required placeholder="Project name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="project-color">Color</label>
+          <input type="color" id="project-color" value="#8b7cf7">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="project-desc">Description</label>
+        <textarea id="project-desc" rows="3" placeholder="Optional..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="project-cancel">Cancel</button>
+        <button type="submit" class="btn-primary">Create Project</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- First-run onboarding -->
+  <div class="onboarding" id="onboarding">
+    <div class="onboarding-card">
+      <button class="onboarding-close" id="onboarding-close" aria-label="Close" type="button">&times;</button>
+      <div class="onboarding-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" fill="currentColor" opacity="0.15"/>
+          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Vault Commander</span>
+      </div>
+      <h1>Choose your vault</h1>
+      <p class="onboarding-sub">Vault Commander reads and writes plain Markdown tasks in a <code>Projects/</code> folder inside your Obsidian vault. Nothing leaves your machine.</p>
+
+      <div class="onboarding-candidates" id="onboarding-candidates"></div>
+
+      <div class="onboarding-manual">
+        <label for="onboarding-path">Choose a folder</label>
+        <div class="onboarding-manual-row">
+          <input type="text" id="onboarding-path" placeholder="/path/to/your/vault" autocomplete="off" spellcheck="false">
+          <button class="btn-secondary" id="onboarding-browse" type="button">Browse…</button>
+          <button class="btn-primary" id="onboarding-connect" type="button">Connect</button>
+        </div>
+        <p class="onboarding-hint">No <code>Projects/</code> folder there yet? We'll create one.</p>
+        <div class="onboarding-browser" id="onboarding-browser"></div>
+      </div>
+
+      <!-- Opt-in, outbound-only. The app sends nothing on its own; these are links you click. -->
+      <div class="onboarding-cta">
+        <p class="onboarding-cta-line">Local-first — Vault Commander never phones home. Updates are opt-in:</p>
+        <div class="onboarding-cta-links">
+          <a class="onboarding-cta-link" href="https://github.com/mdomedia/vault-commander" target="_blank" rel="noopener">★ Star on GitHub</a>
+          <a class="onboarding-cta-link" href="https://vaultcommander.app/#waitlist" target="_blank" rel="noopener">✉ Get product updates →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+*.log
+
+# Atomic-write temp files
+*.tmp
+.*.tmp
+
+# Local environment / secrets
+.env
+.env.*
+
+# Tooling
+.claude/
+
+# Internal / private strategy docs + parked artifacts — NEVER publish.
+# (Do not `git add -f` anything in here.)
+_internal/
+
+# Marketing site is its own repo with its own deploy.
+marketing-site/
+
+# Demo vault output (regenerate any time with: node seed-demo-vault.js "Demo Vault")
+Demo Vault/
