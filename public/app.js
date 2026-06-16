@@ -70,6 +70,37 @@ const THEMES = [
   { id: 'midnight',  name: 'Midnight',  desc: 'Premium navy & aged gold', swatch: ['#0D1626', '#C9A24A', '#131F33', '#5B8AD6'] },
 ];
 
+// --- Pro feature gate ---------------------------------------------------------
+// Single source of truth for what's gated. The public beta ships NO unlock path,
+// so Pro is locked for everyone (isPro() === false). When payments go live, this
+// one function gets wired to license-key validation — nothing else changes.
+// Gated features stay VISIBLE but locked (blurred real shapes), so we never hand
+// a capability to Free users and then claw it back later.
+const PRO_PRICE = { now: '$49', next: '$79', nextDate: 'Sept 1, 2026' };
+const PRO_THEMES = ['slate', 'midnight'];
+function isPro() { return false; }
+function proLock(title, blurb) {
+  return `<div class="pro-lock">
+      <span class="pro-pill">PRO</span>
+      <div class="pro-lock-title">${title}</div>
+      <div class="pro-lock-blurb">${blurb}</div>
+      <a class="pro-cta" href="https://vaultcommander.app/#pricing" target="_blank" rel="noopener">Unlock with Pro · ${PRO_PRICE.now} lifetime</a>
+      <div class="pro-lock-note">${PRO_PRICE.now} now · ${PRO_PRICE.next} on ${PRO_PRICE.nextDate}</div>
+    </div>`;
+}
+// Wrap real content so Free shows it as a blurred, non-interactive preview behind
+// the unlock card. Returns the content untouched once Pro is unlocked.
+function proGate(innerHtml, title, blurb) {
+  if (isPro()) return innerHtml;
+  return `<div class="pro-gate">
+      <div class="pro-gate-content" aria-hidden="true" inert>${innerHtml}</div>
+      ${proLock(title, blurb)}
+    </div>`;
+}
+function proToast() {
+  toast(`That's a Pro feature. Unlock at vaultcommander.app (${PRO_PRICE.now} lifetime)`);
+}
+
 // --- Persistence ---
 function savePrefs() {
   try {
@@ -117,6 +148,8 @@ function resolvedMode() {
 
 function applyTheme() {
   const body = document.body;
+  // Commander Mode is Pro — never let it render on in Free, even from a stale pref.
+  if (!isPro()) state.commander = false;
   body.setAttribute('data-theme', state.themeName);
   body.setAttribute('data-mode', resolvedMode());
   body.setAttribute('data-commander', state.commander ? 'on' : 'off');
@@ -475,16 +508,22 @@ function renderSettings() {
       <span class="seg-label">${label}</span>${sub ? `<span class="seg-sub">${sub}</span>` : ''}
     </button>`;
 
-  const themeCard = (t) => `
-    <button class="theme-card ${t.id === state.themeName ? 'active' : ''}" data-theme-id="${t.id}">
+  const themeCard = (t) => {
+    const locked = !isPro() && PRO_THEMES.includes(t.id);
+    const badge = locked
+      ? '<span class="pro-pill sm">PRO</span>'
+      : (t.id === state.themeName ? '<svg class="theme-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : '');
+    return `
+    <button class="theme-card ${t.id === state.themeName ? 'active' : ''}${locked ? ' locked' : ''}" data-theme-id="${t.id}"${locked ? ' data-locked="1"' : ''}>
       <div class="theme-card-swatch">
         ${t.swatch.map(c => `<span style="background:${c}"></span>`).join('')}
       </div>
       <div class="theme-card-meta">
-        <div class="theme-card-name">${t.name}${t.id === state.themeName ? '<svg class="theme-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
+        <div class="theme-card-name">${t.name}${badge}</div>
         <div class="theme-card-desc">${t.desc}</div>
       </div>
     </button>`;
+  };
 
   $view().innerHTML = `
     <div class="settings">
@@ -529,12 +568,12 @@ function renderSettings() {
 
       <section class="settings-section">
         <div class="settings-section-text">
-          <h2>Commander Mode</h2>
+          <h2>Commander Mode${!isPro() ? ' <span class="pro-pill sm">PRO</span>' : ''}</h2>
           <p>A master UX flip — mascot, personality copy, and gamified streaks. Works across every theme and appearance.</p>
         </div>
         <label class="switch-row">
-          <span class="switch-row-label">${state.commander ? 'On' : 'Off'}</span>
-          <span class="switch ${state.commander ? 'on' : ''}" id="commander-switch" role="switch" aria-checked="${state.commander}"><span class="switch-knob"></span></span>
+          <span class="switch-row-label">${isPro() && state.commander ? 'On' : 'Off'}</span>
+          <span class="switch ${isPro() && state.commander ? 'on' : ''}${!isPro() ? ' locked' : ''}" id="commander-switch" role="switch" aria-checked="${isPro() && state.commander}"><span class="switch-knob"></span></span>
         </label>
       </section>
     </div>`;
@@ -549,6 +588,7 @@ function renderSettings() {
   // Theme cards
   $view().querySelectorAll('#theme-grid .theme-card').forEach(card => {
     card.addEventListener('click', () => {
+      if (card.dataset.locked) { proToast(); return; }
       state.themeName = card.dataset.themeId;
       applyTheme(); savePrefs(); renderSettings();
     });
@@ -556,6 +596,7 @@ function renderSettings() {
   // Commander switch
   const sw = document.getElementById('commander-switch');
   if (sw) sw.addEventListener('click', () => {
+    if (!isPro()) { proToast(); return; }
     state.commander = !state.commander;
     applyTheme(); savePrefs(); renderSettings();
   });
@@ -599,9 +640,11 @@ async function renderDashboard() {
 
   // --- KPI cards ---
   const completedThisWeek = stats.completedLast7Days.reduce((s, d) => s + d.count, 0);
-  const streakDisplay = stats.streak > 0
-    ? `<span class="dash-streak">${state.commander ? '🔥 ' : ''}${stats.streak}</span>`
-    : '<span style="color:var(--text-secondary)">—</span>';
+  const streakDisplay = !isPro()
+    ? '<span class="kpi-lock" title="Streak tracking is a Pro feature">🔒</span>'
+    : stats.streak > 0
+      ? `<span class="dash-streak">${state.commander ? '🔥 ' : ''}${stats.streak}</span>`
+      : '<span style="color:var(--text-secondary)">—</span>';
   const overdueIcon = stats.overdue === 0
     ? '<span style="color:#7E9A5C">✓</span>'
     : `<span class="kpi-dot" style="background:#C0553A"></span>`;
@@ -753,6 +796,7 @@ async function renderDashboard() {
 
       ${kpiHtml}
 
+      ${proGate(`
       <div class="dash-charts-grid">
         <div class="dash-chart-card">
           <div class="dash-chart-header">Velocity — Last 14 Days (${stats.velocity7d}/day avg)</div>
@@ -788,7 +832,7 @@ async function renderDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      </div>`, 'Full analytics dashboard', 'Velocity, status distribution, project health bars, and your 13-week activity heatmap. All unlocked with Pro.')}
     </div>`;
 }
 
@@ -1025,6 +1069,7 @@ function copyCard(id, btn) {
 }
 
 function copyColumn(status) {
+  if (!isPro()) { proToast(); return; }
   const tasks = sortColumn(getFilteredTasks().filter(t => t.status === status), state.kanbanSort[status] || 'priority');
   if (!tasks.length) return;
   const head = `## ${STATUS_LABELS[status]} — ${tasks.length} task${tasks.length === 1 ? '' : 's'}`;
@@ -1292,7 +1337,7 @@ function renderTimeline() {
     });
   });
 
-  $view().innerHTML = `
+  $view().innerHTML = proGate(`
     <div class="timeline-container">
       <div class="timeline-grid">
         <div class="timeline-header-row">
@@ -1301,7 +1346,7 @@ function renderTimeline() {
         </div>
         ${rows}
       </div>
-    </div>`;
+    </div>`, 'Timeline & Gantt', 'Plan across dates with a project-grouped Gantt view, included in Pro.');
 
   // Click handlers
   document.querySelectorAll('.timeline-row-label').forEach(el => {

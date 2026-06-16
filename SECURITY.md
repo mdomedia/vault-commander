@@ -4,14 +4,14 @@ Vault Commander is local-first software. It runs entirely on your machine, reads
 writes the plain Markdown files in your own vault, and makes no network calls of its own.
 This document describes exactly what that means, what we defend against, what we don't,
 and how to report a problem. We'd rather you read the LICENSE and this file than take a
-"trust us" claim on faith — that's the point of shipping the source.
+"trust us" claim on faith. That's the point of shipping the source.
 
 ## Security model in one paragraph
 
 The app is a small Node/Express process that listens on `127.0.0.1:4747` (loopback only),
 serves a static UI from that same origin, and exposes a REST + SSE API the UI uses to read
 and edit task files. There is no account, no cloud, no telemetry, and no outbound network
-traffic. Your data never leaves the machine; "your vault is the database" is literal — the
+traffic. Your data never leaves the machine; "your vault is the database" is literal: the
 files on disk are the source of truth, and deleting the app leaves your Markdown untouched.
 
 ## Network exposure
@@ -38,7 +38,7 @@ files on disk are the source of truth, and deleting the app leaves your Markdown
 
 ## Hardening log
 
-### 2026-06-14 — Pre-launch security pass
+### 2026-06-14: Pre-launch security pass
 
 Four issues found in internal review and fixed before any public release:
 
@@ -65,7 +65,7 @@ Four issues found in internal review and fixed before any public release:
 
 **Explicitly out of scope**
 - **Other software or users already running on your machine.** A local process running as your
-  user can reach `127.0.0.1:4747` and read your vault — but such a process can already read your
+  user can reach `127.0.0.1:4747` and read your vault, but such a process can already read your
   vault files directly. The app does not, and cannot, defend the filesystem from your own account.
 - **Physical access to an unlocked machine.**
 - **The security of your vault's contents themselves** (e.g., secrets you store in task notes).
@@ -73,7 +73,7 @@ Four issues found in internal review and fixed before any public release:
 
 ## Reporting a vulnerability
 
-Please report security issues privately — do not open a public GitHub issue for a vulnerability.
+Please report security issues privately. Do not open a public GitHub issue for a vulnerability.
 
 - **Contact:** security@mdo.media (or hello@mdo.media)
 - Include steps to reproduce and, if possible, a proof of concept.
