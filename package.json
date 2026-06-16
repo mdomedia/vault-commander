@@ -38,7 +38,7 @@
     "markdown",
     "tasks"
   ],
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "chokidar": "^3.6.0",
     "express": "^4.21.0",

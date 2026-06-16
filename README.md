@@ -73,8 +73,12 @@ Vault Commander is built in the open and shaped by how people actually use it. I
 - **Found a bug?** Open an issue with steps to reproduce.
 - **Security issue?** Please don't file a public issue. Follow [SECURITY.md](SECURITY.md) instead.
 
+## Contributing
+
+Issues and pull requests are welcome. Because Vault Commander is dual-licensed (AGPL plus a commercial option), contributions are accepted under a lightweight Contributor License Agreement so the project can keep offering both. I'll point you to it on your first PR.
+
 ## License
 
-Source-available under the **Functional Source License (FSL-1.1-ALv2)**. See [LICENSE.md](LICENSE.md). You can read, run, fork, and modify the code for any non-competing purpose, and each release automatically becomes Apache 2.0 two years after its publication.
+Vault Commander is **open source under the GNU AGPL v3** (see [LICENSE.md](LICENSE.md)). Use it, study it, modify it, and share it freely. If you distribute it or run a modified version as a network service, the AGPL asks that you make your source available under the same terms.
 
-This is **source-available, not "open source,"** and I'd rather say that plainly than overclaim. Read every line that touches your vault. Just don't ship a competing product with it until it converts to Apache 2.0.
+**Dual-licensed.** If you want to use Vault Commander in a closed-source or proprietary product, or otherwise outside the AGPL's terms, a commercial license is available. See [COMMERCIAL.md](COMMERCIAL.md).
