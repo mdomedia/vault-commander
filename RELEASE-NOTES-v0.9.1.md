@@ -1,4 +1,4 @@
-# Vault Commander v0.9.0-beta
+# Vault Commander v0.9.1 (public beta)
 
 **A Jira-grade, local-first project board for your Obsidian vault.** Plain Markdown in, a fast kanban / table / timeline / focus board out, and nothing ever leaves your machine.
 
