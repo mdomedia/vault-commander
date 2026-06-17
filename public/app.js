@@ -1528,7 +1528,7 @@ function renderMarkdown(src) {
 
   // pull fenced code blocks out first
   const blocks = [];
-  src = src.replace(/```[^\n]*\n?([\s\S]*?)```/g, (m, code) => { blocks.push(code.replace(/\n$/, '')); return ` C${blocks.length - 1} `; });
+  src = src.replace(/```[^\n]*\n?([\s\S]*?)```/g, (m, code) => { blocks.push(code.replace(/\n$/, '')); return `C${blocks.length - 1}`; });
 
   const inline = (t) => {
     t = escH(t);
@@ -1547,7 +1547,7 @@ function renderMarkdown(src) {
   const closeList = () => { if (listType) { html += `</${listType}>`; listType = null; } };
 
   for (const raw of src.split('\n')) {
-    const cm = raw.match(/^ C(\d+) $/);
+    const cm = raw.match(/^C(\d+)$/);
     if (cm) { flushPara(); closeList(); html += `<pre><code>${escH(blocks[+cm[1]])}</code></pre>`; continue; }
     if (/^\s*$/.test(raw)) { flushPara(); closeList(); continue; }
     let m;

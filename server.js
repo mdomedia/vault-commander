@@ -970,7 +970,7 @@ async function main() {
   // Start server
   const PORT = 4747;
   // Bind to loopback only — never expose the vault on the LAN.
-  app.listen(PORT, '127.0.0.1', () => {
+  const server = app.listen(PORT, '127.0.0.1', () => {
     console.log(`  Server: http://localhost:${PORT}\n`);
 
     // Auto-open browser
@@ -981,6 +981,20 @@ async function main() {
       // open is optional — don't crash if it fails
       console.log('  (Could not auto-open browser)');
     });
+  });
+
+  // The common failure is the port already being taken, usually because Vault
+  // Commander is already running in another tab or terminal. Exit cleanly with
+  // guidance instead of dumping a raw EADDRINUSE stack trace at the user.
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`\n  Port ${PORT} is already in use.`);
+      console.error(`  Vault Commander may already be running. Open http://localhost:${PORT}`);
+      console.error(`  in your browser, or close the other instance and run this again.\n`);
+    } else {
+      console.error('\n  Could not start the server:', (err && err.message) || err, '\n');
+    }
+    process.exit(1);
   });
 }
 
