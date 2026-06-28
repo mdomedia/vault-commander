@@ -21,6 +21,7 @@
   },
   "files": [
     "server.js",
+    "lib/",
     "public/",
     "README.md",
     "LICENSE.md",

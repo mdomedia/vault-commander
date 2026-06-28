@@ -53,6 +53,9 @@ const state = {
   undoStack: [],            // [{label, undoFn}] — reversible actions
   composerStatus: null,     // which kanban column has an open inline composer
   kanbanSort: {},           // per-column sort: { status: sortKey }
+  pro: false,               // Pro license active on this device (from /api/license)
+  checkoutUrl: 'https://buy.polar.sh/polar_cl_PsfvZ7qh9eJAtIyVCYbsC5alIBTz0OZqbP8fQ2ysd3K',
+  licenseInfo: null,
 };
 
 const SORT_OPTIONS = [
@@ -78,13 +81,13 @@ const THEMES = [
 // a capability to Free users and then claw it back later.
 const PRO_PRICE = { now: '$49', next: '$79', nextDate: 'Sept 1, 2026' };
 const PRO_THEMES = ['slate', 'midnight'];
-function isPro() { return false; }
+function isPro() { return !!state.pro; }
 function proLock(title, blurb) {
   return `<div class="pro-lock">
       <span class="pro-pill">PRO</span>
       <div class="pro-lock-title">${title}</div>
       <div class="pro-lock-blurb">${blurb}</div>
-      <a class="pro-cta" href="https://vaultcommander.app/#pricing" target="_blank" rel="noopener">Unlock with Pro · ${PRO_PRICE.now} lifetime</a>
+      <a class="pro-cta" href="${state.checkoutUrl}" target="_blank" rel="noopener">Unlock with Pro · ${PRO_PRICE.now} lifetime</a>
       <div class="pro-lock-note">${PRO_PRICE.now} now · ${PRO_PRICE.next} on ${PRO_PRICE.nextDate}</div>
     </div>`;
 }
@@ -534,6 +537,25 @@ function renderSettings() {
 
       <section class="settings-section">
         <div class="settings-section-text">
+          <h2>Vault Commander Pro ${!state.pro ? '<span class="pro-pill sm">FREE</span>' : ''}</h2>
+          <p>${state.pro
+            ? 'Pro is active on this device. Thank you for supporting local-first software.'
+            : 'Unlock Timeline/Gantt, the full analytics dashboard, Commander Mode, the theme pack, and Agent Mode. One lifetime license, ' + PRO_PRICE.now + '.'}</p>
+        </div>
+        <div class="pro-setting">
+          ${state.pro
+            ? `<div class="pro-active"><span class="pro-pill">PRO</span> Active${state.licenseInfo && state.licenseInfo.keyMasked ? ` · <span class="mono">${esc(state.licenseInfo.keyMasked)}</span>` : ''}</div>
+               <button class="btn-secondary" id="pro-deactivate" type="button">Deactivate on this device</button>`
+            : `<div class="pro-activate-row">
+                 <input type="text" id="pro-key" placeholder="VCMD_…" autocomplete="off" spellcheck="false">
+                 <button class="btn-primary" id="pro-activate" type="button">Activate</button>
+               </div>
+               <a class="pro-buy-link" href="${state.checkoutUrl}" target="_blank" rel="noopener">Buy Vault Commander Pro — ${PRO_PRICE.now} lifetime →</a>`}
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="settings-section-text">
           <h2>Vault</h2>
           <p>The folder Vault Commander reads and writes. Switch to point it at a different vault.</p>
         </div>
@@ -603,6 +625,39 @@ function renderSettings() {
   // Switch vault
   const svb = document.getElementById('switch-vault-btn');
   if (svb) svb.addEventListener('click', openVaultSwitcher);
+
+  // Pro — activate license
+  const activateBtn = document.getElementById('pro-activate');
+  if (activateBtn) activateBtn.addEventListener('click', async () => {
+    const key = (document.getElementById('pro-key').value || '').trim();
+    if (!key) { toast('Enter your license key.', true); return; }
+    activateBtn.disabled = true; activateBtn.textContent = 'Activating…';
+    try {
+      const r = await fetch('/api/license/activate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }),
+      }).then((res) => res.json());
+      if (r.ok && r.pro) {
+        state.pro = true; state.licenseInfo = r;
+        toast('Pro activated. Welcome, Commander.');
+        applyTheme(); renderAll();
+      } else {
+        toast(r.error || 'Activation failed.', true);
+        activateBtn.disabled = false; activateBtn.textContent = 'Activate';
+      }
+    } catch {
+      toast('Could not reach the server.', true);
+      activateBtn.disabled = false; activateBtn.textContent = 'Activate';
+    }
+  });
+
+  // Pro — deactivate on this device
+  const deactBtn = document.getElementById('pro-deactivate');
+  if (deactBtn) deactBtn.addEventListener('click', async () => {
+    try { await fetch('/api/license/deactivate', { method: 'POST' }); } catch { /* ignore */ }
+    state.pro = false; state.licenseInfo = null;
+    toast('Pro deactivated on this device.');
+    applyTheme(); renderAll();
+  });
 }
 
 // --- Dashboard ---
@@ -2160,6 +2215,7 @@ function mountSavedViews() {
 async function init() {
   loadPrefs();
   applyTheme();
+  await loadLicense();
 
   // Set initial view tab
   document.querySelectorAll('.view-tab').forEach(tab => {
@@ -2200,6 +2256,15 @@ async function loadBoard() {
   } catch {
     $view().innerHTML = '<div class="empty-state">Failed to load data. Is the server running?</div>';
   }
+}
+
+async function loadLicense() {
+  try {
+    const lic = await api('/api/license');
+    state.pro = !!lic.pro;
+    if (lic.checkoutUrl) state.checkoutUrl = lic.checkoutUrl;
+    state.licenseInfo = lic;
+  } catch { /* offline or no server — remain on Free */ }
 }
 
 function bindGlobalEvents() {

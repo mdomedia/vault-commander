@@ -495,6 +495,18 @@ body {
 .theme-card.locked:hover { opacity: 0.9; }
 .switch.locked { opacity: 0.5; }
 
+/* Pro activation (Settings) */
+.pro-setting { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.pro-activate-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pro-activate-row input {
+  padding: 8px 12px; min-width: 240px; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.pro-activate-row input:focus { outline: none; border-color: var(--accent); }
+.pro-buy-link { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.pro-buy-link:hover { text-decoration: underline; }
+.pro-active { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); }
+
 .onboarding-browser { display: none; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
 .onboarding-browser.open { display: block; }
 .onboarding-browser-head {

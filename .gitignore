@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Packaged binaries (built by CI / npm run build:binaries)
+dist/
+
 # OS / editor cruft
 .DS_Store
 *.log

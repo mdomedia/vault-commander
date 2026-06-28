@@ -1,10 +1,10 @@
 # Security
 
-Vault Commander is local-first software. It's designed to run on your own machine, read and write the plain Markdown files in your vault, and make no network calls of its own. This document describes what the app is designed to do, the measures we've taken, and the limits of those measures. No software is perfectly secure, so we'd rather show you the source and describe our approach honestly than ask you to take a "trust us" claim on faith.
+Vault Commander is local-first software. It's designed to run on your own machine, read and write the plain Markdown files in your vault, and make no network calls of its own, with a single exception: if you choose to buy and activate Pro, the app contacts our payment provider once to validate your license key. The free core makes no network calls at all. This document describes what the app is designed to do, the measures we've taken, and the limits of those measures. No software is perfectly secure, so we'd rather show you the source and describe our approach honestly than ask you to take a "trust us" claim on faith.
 
 ## Security model in one paragraph
 
-The app is a small Node/Express process that listens on `127.0.0.1:4747` (loopback) by default, serves a static UI from that same origin, and exposes a REST + SSE API the UI uses to read and edit task files. There's no account, no cloud, and no telemetry, and the app is built to make no outbound network calls. The design goal is simple: your vault stays on your machine, the files on disk are the source of truth, and removing the app leaves your Markdown untouched.
+The app is a small Node/Express process that listens on `127.0.0.1:4747` (loopback) by default, serves a static UI from that same origin, and exposes a REST + SSE API the UI uses to read and edit task files. There's no account, no cloud, and no telemetry. The free core makes no outbound network calls; the only one the app ever makes is validating your Pro license with our payment provider (Polar), and only when you activate Pro. The design goal is simple: your vault stays on your machine, the files on disk are the source of truth, and removing the app leaves your Markdown untouched.
 
 ## No warranty
 
@@ -17,7 +17,7 @@ Vault Commander is provided "as is," without warranty of any kind (see [LICENSE.
 | Bind address | Binds to `127.0.0.1` by default, so in a normal run it isn't exposed to your LAN, WiFi, or other devices. |
 | Cross-origin access | No CORS allowance is emitted, so other websites you have open are not granted read access to the API's responses. |
 | Host-header check | Requests whose `Host` header isn't loopback are rejected with `403`, which is intended to reduce the risk of DNS rebinding. |
-| Outbound calls | The app makes no outbound network calls of its own and is designed to work offline. |
+| Outbound calls | The free core makes none and works fully offline. The only outbound call is one-time Pro license activation/validation with our payment provider (Polar), and only if you activate Pro. After activation it's cached locally and keeps working offline. |
 | Telemetry / analytics | We don't collect or transmit usage data. |
 
 ## How your files are handled

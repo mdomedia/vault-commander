@@ -15,6 +15,7 @@ const chokidar = require('chokidar');
 const { globSync } = require('glob');
 const crypto = require('crypto');
 const os = require('os');
+const license = require('./lib/license');
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -520,6 +521,24 @@ app.get('/api/browse', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// License / Pro endpoints (Polar). License activation is the only outbound
+// network call the app ever makes, and only when the user activates Pro.
+// ---------------------------------------------------------------------------
+
+app.get('/api/license', (_req, res) => res.json(license.status()));
+
+app.post('/api/license/activate', async (req, res) => {
+  try {
+    const result = await license.activate(req.body && req.body.key);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(400).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/license/deactivate', (_req, res) => res.json({ ok: true, ...license.deactivate() }));
+
+// ---------------------------------------------------------------------------
 // Task endpoints
 // ---------------------------------------------------------------------------
 
@@ -947,6 +966,9 @@ function handleFileEvent(absPath) {
 async function main() {
   console.log('\n  ⚡ Vault Commander\n');
 
+  // Opportunistic, non-blocking Pro license re-check (offline-safe; never downgrades on error).
+  license.revalidate().catch(() => {});
+
   // Resolve which vault to open: explicit --vault flag > saved config >
   // current folder (if it's a vault) > first-run onboarding in the browser.
   let initial = null;
@@ -973,14 +995,27 @@ async function main() {
   const server = app.listen(PORT, '127.0.0.1', () => {
     console.log(`  Server: http://localhost:${PORT}\n`);
 
-    // Auto-open browser
-    import('open').then((mod) => {
-      const openFn = mod.default || mod;
-      openFn(`http://localhost:${PORT}`);
-    }).catch(() => {
-      // open is optional — don't crash if it fails
-      console.log('  (Could not auto-open browser)');
-    });
+    // Auto-open browser, unless we are embedded. The desktop app (Electron)
+    // sets VC_NO_OPEN and loads the UI in its own window. The 'open' package is
+    // ESM-only and may be unavailable in a packaged binary, so fall back to the
+    // platform's native opener if the dynamic import fails.
+    if (!process.env.VC_NO_OPEN) {
+      const url = `http://localhost:${PORT}`;
+      import('open').then((mod) => {
+        const openFn = mod.default || mod;
+        openFn(url);
+      }).catch(() => {
+        try {
+          const { exec } = require('child_process');
+          const cmd = process.platform === 'darwin' ? `open "${url}"`
+            : process.platform === 'win32' ? `start "" "${url}"`
+            : `xdg-open "${url}"`;
+          exec(cmd, () => {});
+        } catch (_) {
+          console.log(`  Open ${url} in your browser.`);
+        }
+      });
+    }
   });
 
   // The common failure is the port already being taken, usually because Vault

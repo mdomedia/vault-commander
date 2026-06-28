@@ -1,0 +1,79 @@
+name: Build & Release desktop app
+
+# Cut a release by pushing a version tag, e.g.:
+#   git tag v0.9.2 && git push origin v0.9.2
+# Each OS builds its own installer with electron-builder. macOS is code-signed
+# and notarized when the Apple secrets below are present.
+#
+# Required repo secrets for signed macOS builds:
+#   MAC_CSC_LINK                 base64 of your Developer ID Application .p12
+#   MAC_CSC_KEY_PASSWORD         password for that .p12
+#   APPLE_ID                     your Apple ID email
+#   APPLE_APP_SPECIFIC_PASSWORD  app-specific password (appleid.apple.com)
+#   APPLE_TEAM_ID                your 10-char Team ID
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install desktop dependencies
+        run: npm install
+
+      - name: Build (and sign/notarize on macOS)
+        shell: bash
+        run: npm run dist
+        env:
+          # macOS signing — scoped to the mac runner so the Apple cert is never
+          # handed to the Windows signer.
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.MAC_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.MAC_CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Attach installers to the Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/dist/*.dmg
+            desktop/dist/*.zip
+            desktop/dist/*.exe
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+
+      - name: Upload build artifacts (manual runs)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vault-commander-${{ matrix.os }}
+          path: |
+            desktop/dist/*.dmg
+            desktop/dist/*.zip
+            desktop/dist/*.exe
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+          if-no-files-found: ignore
