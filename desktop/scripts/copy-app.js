@@ -26,4 +26,9 @@ const dstPublic = path.join(desktopDir, 'public');
 fs.rmSync(dstPublic, { recursive: true, force: true });
 copyDir(path.join(repoRoot, 'public'), dstPublic);
 
-console.log('copy-app: copied server.js and public/ from the repo root.');
+// lib/ — server.js requires ./lib/license, so the desktop bundle needs it too.
+const dstLib = path.join(desktopDir, 'lib');
+fs.rmSync(dstLib, { recursive: true, force: true });
+copyDir(path.join(repoRoot, 'lib'), dstLib);
+
+console.log('copy-app: copied server.js, public/ and lib/ from the repo root.');

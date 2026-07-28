@@ -54,6 +54,42 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # On 2026-07-28 macOS quarantined and deleted our own Electron runtime
+      # mid-build: Apple had revoked notarization for Electron 31.7.7, so every
+      # installer we cut would have greeted downloaders with "Malware Blocked
+      # and Moved to Trash". Nothing in the repo changed to cause it — Apple's
+      # trust database did — so no test could have caught it. This can regress
+      # again the day Apple revokes whatever version we're on, so assert it
+      # every build rather than trusting that the runtime is still good.
+      - name: Refuse to ship a revoked or unsigned runtime (macOS)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP=$(find dist -maxdepth 2 -name "*.app" -print -quit)
+          if [ -z "$APP" ]; then
+            echo "::error::No .app was produced — cannot verify the runtime."
+            exit 1
+          fi
+          echo "Assessing: $APP"
+          VERDICT=$(spctl -a -vvv "$APP" 2>&1 || true)
+          echo "$VERDICT"
+
+          if grep -qi "revoked" <<<"$VERDICT"; then
+            echo "::error::Gatekeeper reports this runtime's notarization is REVOKED. \
+          Users would see a malware dialog. Bump Electron and rebuild."
+            exit 1
+          fi
+
+          # A tagged release is a public artifact: unsigned is also a fail here,
+          # even though it's fine for a local test build.
+          if ! grep -qi "accepted" <<<"$VERDICT"; then
+            echo "::error::Gatekeeper did not accept this build (not signed/notarized). \
+          Check the Developer ID cert and Apple secrets."
+            exit 1
+          fi
+          echo "Gatekeeper accepted the build."
+
       - name: Attach installers to the Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2

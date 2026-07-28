@@ -4,3 +4,4 @@ dist/
 # Copied in from the repo root at build time (single source of truth lives there)
 server.js
 public/
+lib/
