@@ -3,7 +3,11 @@
   "version": "0.10.0",
   "private": true,
   "description": "Vault Commander desktop app — an Electron shell that runs the local server and shows it in a real window.",
-  "author": "MdO Media LLC",
+  "author": {
+    "name": "MdO Media LLC",
+    "email": "hola@mdo.studio"
+  },
+  "homepage": "https://vaultcommander.app",
   "license": "AGPL-3.0-or-later",
   "main": "main.js",
   "scripts": {
@@ -49,7 +53,8 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": true
+      "notarize": true,
+      "identity": "MdO Media, LLC (859RGHDYYN)"
     },
     "dmg": {
       "title": "Vault Commander ${version}"
@@ -69,7 +74,8 @@
         "AppImage",
         "deb"
       ],
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "MdO Media LLC <hola@mdo.studio>"
     }
   }
 }
