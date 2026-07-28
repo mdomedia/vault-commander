@@ -274,7 +274,10 @@ body {
   gap: 8px;
   min-width: 0;
   flex: 1;
-  overflow-x: auto;
+  /* Deliberately not a scroll container: chips that do not fit are moved into
+     the "+N" popover by layoutProjectChips(), and an `overflow` value here
+     would clip that popover. */
+  overflow: visible;
 }
 
 .filter-bar-right {
@@ -288,6 +291,81 @@ body {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
+  min-width: 0;
+}
+
+/* ---- Project chip overflow ("+N" popover) ---- */
+
+.chip-overflow {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.chip-more {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+
+.chip-more:hover,
+.chip-more.open {
+  border-style: solid;
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+/* A filter is on inside the popover, where it cannot be seen. Say so. */
+.chip-more.has-active::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.chip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised, var(--surface));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+}
+
+.chip-popover[hidden] { display: none; }
+
+/* Inside the popover the chips are a menu, not a scrolling row: full width,
+   left-aligned, so the project names line up and stay readable. */
+.chip-popover .project-chip {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 7px;
+}
+
+/* Right edge of a narrow window: flip the panel so it stays on screen. */
+@media (max-width: 720px) {
+  .chip-popover { left: auto; right: 0; }
 }
 
 .project-chip {

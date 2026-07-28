@@ -56,6 +56,7 @@ const state = {
   pro: false,               // Pro license active on this device (from /api/license)
   checkoutUrl: 'https://buy.polar.sh/polar_cl_PsfvZ7qh9eJAtIyVCYbsC5alIBTz0OZqbP8fQ2ysd3K',
   licenseInfo: null,
+  chipMenuOpen: false,      // project-chip overflow popover (survives re-renders)
 };
 
 const SORT_OPTIONS = [
@@ -482,7 +483,79 @@ function renderProjectChips() {
       <span class="chip-dot" style="background:${isActive ? '#fff' : esc(p.color)}"></span>
       ${esc(p.title)}
     </button>`;
-  }).join('');
+  }).join('') + `
+    <div class="chip-overflow" hidden>
+      <button class="chip-more" type="button" aria-haspopup="true" aria-expanded="false"></button>
+      <div class="chip-popover" role="group" aria-label="More projects" hidden></div>
+    </div>`;
+  // Measure in the same tick as the write, so the row never paints mid-overflow.
+  layoutProjectChips();
+}
+
+// The filter bar used to scroll sideways once a vault had more projects than
+// fit the window. A sideways scroll region is invisible until you find it and
+// costs a drag to reach, so the projects past the fold may as well not exist.
+// Collapse them into a "+N" popover instead: the count is visible, and the
+// remainder is one click away. The overflowed chips are *moved*, not cloned,
+// so the delegated click handler on #project-chips keeps filtering them.
+function layoutProjectChips() {
+  const wrap = $chips();
+  const overflow = wrap && wrap.querySelector('.chip-overflow');
+  if (!overflow) return;
+  const panel = overflow.querySelector('.chip-popover');
+  const moreBtn = overflow.querySelector('.chip-more');
+
+  // Idempotent: pull everything back into the row before re-measuring, so this
+  // is safe to call on every resize tick.
+  while (panel.firstChild) wrap.insertBefore(panel.firstChild, overflow);
+
+  const chips = Array.from(wrap.children).filter(el => el.classList.contains('project-chip'));
+  if (!chips.length) { overflow.hidden = true; return; }
+
+  const GAP = 6;
+  const row = wrap.parentElement;                 // .filter-bar-left
+  const addBtn = row.querySelector('.chip-add');  // the "+ Project" button
+  const avail = row.clientWidth - (addBtn ? addBtn.offsetWidth + 8 : 0);
+
+  const widths = chips.map(c => c.offsetWidth);
+  const total = widths.reduce((sum, w) => sum + w + GAP, -GAP);
+  if (total <= avail) { overflow.hidden = true; return; }
+
+  // Something has to go, so the "+N" button now needs room of its own. Label it
+  // with the widest count it could show before measuring, or a two-digit count
+  // overflows the space we reserved for a one-digit one.
+  moreBtn.textContent = `+${chips.length}`;
+  overflow.hidden = false;
+  const reserve = moreBtn.offsetWidth + GAP;
+
+  let used = 0, keep = 0;
+  for (let i = 0; i < chips.length; i++) {
+    const next = used + (i ? GAP : 0) + widths[i];
+    if (next > avail - reserve) break;
+    used = next; keep++;
+  }
+  // A lone "+N" with no chip beside it reads as a broken toolbar; one cramped
+  // chip is the better failure.
+  if (keep === 0) keep = 1;
+
+  const hidden = chips.slice(keep);
+  hidden.forEach(c => panel.appendChild(c));
+  moreBtn.textContent = `+${hidden.length}`;
+  // Surface the case where a filter the user cannot see is switched on.
+  moreBtn.classList.toggle('has-active', hidden.some(c => c.classList.contains('active')));
+  setChipMenu(state.chipMenuOpen);
+}
+
+function setChipMenu(open) {
+  const wrap = $chips();
+  const overflow = wrap && wrap.querySelector('.chip-overflow');
+  if (!overflow || overflow.hidden) { state.chipMenuOpen = false; return; }
+  const panel = overflow.querySelector('.chip-popover');
+  const btn = overflow.querySelector('.chip-more');
+  state.chipMenuOpen = !!open;
+  panel.hidden = !state.chipMenuOpen;
+  btn.classList.toggle('open', state.chipMenuOpen);
+  btn.setAttribute('aria-expanded', state.chipMenuOpen ? 'true' : 'false');
 }
 
 function renderView() {
@@ -2303,14 +2376,43 @@ function bindGlobalEvents() {
 
   // Project chips (delegated)
   document.getElementById('project-chips').addEventListener('click', (e) => {
+    if (e.target.closest('.chip-more')) { setChipMenu(!state.chipMenuOpen); return; }
     const chip = e.target.closest('.project-chip');
     if (!chip) return;
     const id = chip.dataset.id;
     if (state.activeProjects.has(id)) state.activeProjects.delete(id);
     else state.activeProjects.add(id);
     savePrefs();
+    // renderAll re-renders the chips; layoutProjectChips restores the popover
+    // from state.chipMenuOpen so you can toggle several projects in a row.
     renderAll();
   });
+
+  // Dismiss the overflow popover the way every other menu on this OS does.
+  document.addEventListener('click', (e) => {
+    if (state.chipMenuOpen && !e.target.closest('.chip-overflow')) setChipMenu(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.chipMenuOpen) setChipMenu(false);
+  });
+
+  // Re-measure when the window changes size. Observing the row rather than the
+  // window also catches the sidebar/panel opening, which resizes it too.
+  //
+  // Called straight from the callback rather than deferred through
+  // requestAnimationFrame: rAF does not run in a background tab, so a window
+  // resized while the app was not frontmost would come back still overflowing.
+  // ResizeObserver already batches, and the guard covers the re-entrancy from
+  // mutating chips inside the element we are observing.
+  const filterRow = document.querySelector('.filter-bar-left');
+  if (filterRow && window.ResizeObserver) {
+    let laying = false;
+    new ResizeObserver(() => {
+      if (laying) return;
+      laying = true;
+      try { layoutProjectChips(); } finally { laying = false; }
+    }).observe(filterRow);
+  }
 
   // Filter checkboxes
   document.getElementById('filter-done').addEventListener('change', (e) => {
