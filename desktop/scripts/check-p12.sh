@@ -13,8 +13,30 @@
 set -uo pipefail
 
 P12="${1:-}"
-if [ -z "$P12" ] || [ ! -f "$P12" ]; then
+
+# Certificate exports routinely land with spaces in the name ("dev id foo.p12"),
+# and an unquoted path arrives here already split into pieces. Say that plainly
+# instead of printing a generic usage line the reader has to decode.
+if [ "$#" -gt 1 ]; then
+  echo "The path was split into $# arguments, so it needs quoting:" >&2
+  echo >&2
+  echo "  bash desktop/scripts/check-p12.sh \"$*\"" >&2
+  exit 2
+fi
+
+if [ -z "$P12" ]; then
   echo "Usage: bash desktop/scripts/check-p12.sh \"/path/to/cert.p12\"" >&2
+  exit 2
+fi
+
+if [ ! -f "$P12" ]; then
+  echo "No such file: $P12" >&2
+  NEWEST=$(ls -t "$HOME"/Documents/*.p12 2>/dev/null | head -1)
+  if [ -n "$NEWEST" ]; then
+    echo >&2
+    echo "Most recent .p12 in ~/Documents:" >&2
+    echo "  bash desktop/scripts/check-p12.sh \"$NEWEST\"" >&2
+  fi
   exit 2
 fi
 
