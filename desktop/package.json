@@ -1,6 +1,6 @@
 {
   "name": "vault-commander-desktop",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
   "description": "Vault Commander desktop app — an Electron shell that runs the local server and shows it in a real window.",
   "author": "MdO Media LLC",
