@@ -66,6 +66,38 @@ function waitForServer(done, tries = 0) {
   });
 }
 
+// The app already wears its own name and mark in the header, so a native title
+// bar saying "Vault Commander" directly above a logo saying "Vault Commander"
+// is pure redundancy. `hiddenInset` drops the OS title bar and floats the
+// traffic lights into our header instead, the way Mail, Teams and ChatGPT do.
+// The trade: an unframed window is no longer draggable, so the header has to
+// opt back in via `-webkit-app-region` below.
+const HEADER_H = 52;   // .header height in public/style.css
+const LIGHTS_W = 52;   // width of the three traffic lights
+const LIGHTS_X = 20;   // their inset from the left edge
+
+// Desktop-only chrome. This lives here rather than in public/style.css on
+// purpose: that stylesheet is shared with `npx vault-commander` in a normal
+// browser tab, where there are no traffic lights to make room for.
+// `!important` is load-bearing, not laziness: insertCSS lands in a lower
+// cascade origin than the page's own stylesheet, so a plain `padding-left`
+// here silently loses to `.header { padding: 0 20px }` and the logo ends up
+// underneath the traffic lights.
+const DESKTOP_CSS = `
+  .header {
+    padding-left: ${LIGHTS_X + LIGHTS_W + 20}px !important;
+    -webkit-app-region: drag;
+  }
+  .header button,
+  .header a,
+  .header input,
+  .header select,
+  .header [role="tab"],
+  .header [role="switch"] {
+    -webkit-app-region: no-drag;
+  }
+`;
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -75,9 +107,14 @@ function createWindow() {
     backgroundColor: '#EAE3D5',
     title: 'Vault Commander',
     show: false,
+    titleBarStyle: 'hiddenInset',
+    // Centre the lights in our header rather than the vanished title bar.
+    trafficLightPosition: { x: LIGHTS_X, y: Math.round((HEADER_H - 16) / 2) },
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });
   win.once('ready-to-show', () => win.show());
+  // Insert before paint so the header never flashes at the wrong offset.
+  win.webContents.on('did-finish-load', () => win.webContents.insertCSS(DESKTOP_CSS));
   win.loadURL(APP_URL);
   // Open real external links (mdo.studio, GitHub, etc.) in the system browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
