@@ -11,49 +11,70 @@
    warm cream paper, clay accent, warm-tinted shadows, generous air.
    ------------------------------------------------------------ */
 :root {
-  --bg: #EAE3D5;            /* warm linen — page gutter behind columns */
-  --col-well: #F5F2EA;      /* light warm near-white — column wells (readability) */
-  --surface: #FEFCF8;       /* crisp warm-white paper — cards, panels */
-  --surface-raised: #FFFFFF;/* brightest paper — hover / selected */
-  --border: rgba(74,52,30,0.13);       /* clay-brown, barely-there rule */
-  --border-strong: rgba(74,52,30,0.22);
-  --hover-overlay: rgba(74,52,30,0.05);
-  --text: #2A1F14;          /* deep warm espresso, not pure black */
-  --text-secondary: rgba(42,31,20,0.56);
-  --text-muted: rgba(42,31,20,0.34);
-  --accent: #B5613A;        /* clay / terracotta */
-  --accent-hover: #A2552F;
-  --accent-light: rgba(181,97,58,0.12);
-  --accent-amber: #C8862E;  /* secondary warm signal */
+  /* ------------------------------------------------------------------
+     BRASS — the default identity.
 
-  --status-todo: #A8987E;     /* warm stone */
-  --status-active: #5E8AA0;   /* café-window blue */
-  --status-blocked: #C0553A;  /* terracotta */
-  --status-review: #C8862E;   /* amber */
-  --status-done: #7E9A5C;     /* warm olive */
-  --status-deferred: #C9BCA4;
-  --status-cancelled: #DCD2BE;
+     Gold is the signal colour, but it cannot do every job. At full chroma
+     it fails contrast as text on a light ground, so the accent splits in
+     two: --accent is whatever is legible as TEXT and borders on the
+     current ground (deep brass on light, gold on dark), and --gold is the
+     fill-only signal. --on-accent is the text colour that sits on top of
+     an accent fill, which is why nothing hard-codes #fff any more.
 
-  --priority-critical: #BC4A2E;
-  --priority-high: #C8862E;
-  --priority-medium: #97876B;
-  --priority-low: #B3A488;
+     Vibrancy here comes from distance, not brightness: one high-chroma
+     gold against a restrained bone or ink ground, with everything else
+     held back. The old palette failed because all twelve colours sat in
+     the same 47-62% lightness band, so nothing could lead.
+     ------------------------------------------------------------------ */
+  --bg: #E8E5DB;            /* bone — paper, not the old orange-cast linen */
+  --col-well: #F2F0E9;      /* column wells */
+  --surface: #FBFAF6;       /* cards, panels */
+  --surface-raised: #FFFFFF;/* hover / selected */
+  --border: rgba(28,26,20,0.12);       /* neutral ink, not clay-brown */
+  --border-strong: rgba(28,26,20,0.22);
+  --hover-overlay: rgba(28,26,20,0.045);
+  --text: #1C1A14;          /* near-black, faint gold cast */
+  --text-secondary: rgba(28,26,20,0.58);
+  --text-muted: rgba(28,26,20,0.36);
+  --accent: #926500;        /* deep brass — legible as text AND takes white */
+  --accent-hover: #825A00;
+  --accent-light: rgba(154,107,0,0.12);
+  --accent-amber: #F0A81E;
+  --on-accent: #FFFFFF;     /* text on an --accent fill */
+  --gold: #F0A81E;          /* the signal — fills, bars, badges. never text */
+  --on-gold: #1C1A14;       /* text on a --gold fill */
+  --gold-soft: #FFD873;
+  --violet: #6B4EF0;        /* second voice: nods at Obsidian, isn't its palette */
+  --violet-light: rgba(107,78,240,0.12);
 
-  /* warm activity ramp (clay/amber) */
-  --heat-0: rgba(74,52,30,0.07);
-  --heat-1: #E3CDA8;
-  --heat-2: #D4A86F;
-  --heat-3: #C0803C;
-  --heat-4: #A65E28;
+  --status-todo: #9A9384;     /* stone */
+  --status-active: #E0A012;   /* gold — the brand marks what is in play */
+  --status-blocked: #D64545;
+  --status-review: #6B4EF0;   /* violet */
+  --status-done: #3F9E6C;
+  --status-deferred: #C4BEB0;
+  --status-cancelled: #DAD5C8;
+
+  --priority-critical: #D64545;
+  --priority-high: #E0A012;
+  --priority-medium: #9A9384;
+  --priority-low: #BAB4A5;
+
+  /* activity ramp — pale gold to deep brass */
+  --heat-0: rgba(28,26,20,0.06);
+  --heat-1: #F3E3B8;
+  --heat-2: #E9C778;
+  --heat-3: #DDA92F;
+  --heat-4: #B07D06;
 
   --radius: 12px;
   --radius-sm: 8px;
   --radius-pill: 100px;
-  /* warm-tinted shadows — like paper on a table, never grey */
-  --shadow-sm: 0 1px 2px rgba(74,52,30,.07);
-  --shadow: 0 1px 3px rgba(74,52,30,.10), 0 2px 8px rgba(74,52,30,.06);
-  --shadow-lg: 0 6px 18px rgba(74,52,30,.12);
-  --shadow-xl: 0 14px 34px rgba(74,52,30,.18);
+  /* ink-tinted shadows — paper on a table, but no longer clay-brown */
+  --shadow-sm: 0 1px 2px rgba(28,26,20,.06);
+  --shadow: 0 1px 3px rgba(28,26,20,.09), 0 2px 8px rgba(28,26,20,.05);
+  --shadow-lg: 0 6px 18px rgba(28,26,20,.11);
+  --shadow-xl: 0 14px 34px rgba(28,26,20,.16);
   --transition: 160ms cubic-bezier(.4,0,.2,1);
   --ease: cubic-bezier(.4,0,.2,1);
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
@@ -190,8 +211,16 @@ body {
   padding: 7px 16px;
   border: none;
   border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: #fff;
+  /* Gold, not --accent. On dark the two are the same colour, but on light
+     --accent is the deep brass reserved for text, and a button wearing it
+     reads muddy — the one loud element on the page should be the loud
+     colour. Ink on gold in both modes. */
+  background: var(--gold);
+  color: var(--on-gold);
+  /* Gold against the bone page is 1.61:1 — below the 3:1 WCAG 1.4.11 needs for
+     a control's boundary. Gold cannot reach 3:1 and still be gold, so the edge
+     carries it: deep brass hits 4.08:1 against bone. */
+  border: 1px solid var(--accent);
   font-size: 12.5px;
   font-weight: 600;
   font-family: var(--font);
@@ -200,7 +229,10 @@ body {
   white-space: nowrap;
 }
 
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
+/* Brightness rather than --accent-hover: the button is gold now, and
+   --accent-hover is the *deep brass* hover, which would darken it on hover
+   instead of lifting it. */
+.btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: var(--shadow); }
 .btn-primary:active { transform: translateY(0); }
 
 .btn-secondary {
@@ -557,14 +589,18 @@ body {
 .pro-lock-title { font-size: 17px; font-weight: 700; color: var(--text); }
 .pro-lock-blurb { font-size: 13px; color: var(--text-secondary); max-width: 380px; line-height: 1.5; }
 .pro-lock-note { font-size: 11.5px; color: var(--text-muted); }
+/* Pro badge and buy button stay brand gold in every theme. They are the one
+   place the identity should not bend to the user's chosen palette — a Slate
+   user still buys Vault Commander, not Slate. */
 .pro-pill {
   display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .08em;
-  color: #fff; background: var(--accent); border-radius: 5px; padding: 2px 7px; vertical-align: middle;
+  color: var(--on-gold); background: var(--gold); border-radius: 5px; padding: 2px 7px; vertical-align: middle;
 }
 .pro-pill.sm { font-size: 9px; padding: 1px 5px; margin-left: 6px; }
 .pro-cta {
   display: inline-block; margin-top: 2px; padding: 9px 16px; border-radius: var(--radius-sm);
-  background: var(--accent); color: #fff; font-weight: 700; font-size: 13.5px; text-decoration: none;
+  background: var(--gold); color: var(--on-gold); border: 1px solid var(--accent);
+  font-weight: 700; font-size: 13.5px; text-decoration: none;
   transition: var(--transition);
 }
 .pro-cta:hover { filter: brightness(1.08); }
@@ -2274,25 +2310,34 @@ body {
    SANDSTONE — dark (warm charcoal / dark wood, evening mode)
    The inside of a good café at 9pm: warm dark, not a cold void.
    ------------------------------------------------------------ */
-[data-theme="sandstone"][data-mode="dark"] {
-  --bg: #15110D;
-  --col-well: #1A1612;
-  --surface: #251F19;       /* oiled wood */
-  --surface-raised: #302820;
-  --border: rgba(255,240,218,0.09);
-  --border-strong: rgba(255,240,218,0.16);
-  --hover-overlay: rgba(255,240,218,0.05);
-  --text: rgba(255,244,228,0.92);
-  --text-secondary: rgba(255,244,228,0.48);
-  --text-muted: rgba(255,244,228,0.28);
-  --accent: #D08A48;
-  --accent-hover: #DE9A56;
-  --accent-light: rgba(208,138,72,0.16);
-  --accent-amber: #D9A24A;
-  --status-todo: #8C8270; --status-active: #6FA0B8; --status-blocked: #E0664A;
-  --status-review: #E0A24A; --status-done: #93B36E; --status-deferred: #5A5246; --status-cancelled: #423B30;
-  --priority-critical: #E0664A; --priority-high: #E0A24A; --priority-medium: #8C8270; --priority-low: #6A6253;
-  --heat-0: rgba(255,240,218,0.06); --heat-1: #4A3A28; --heat-2: #7A5A30; --heat-3: #A8763A; --heat-4: #D08A48;
+/* Brass, dark. This is where gold is supposed to live: on a near-black
+   ground it is legible as text, so --accent and --gold converge and the
+   text that sits on a fill flips to ink. */
+[data-theme="brass"][data-mode="dark"] {
+  --bg: #12100E;
+  --col-well: #171410;
+  --surface: #1C1915;
+  --surface-raised: #26221B;
+  --border: rgba(247,244,237,0.10);
+  --border-strong: rgba(247,244,237,0.18);
+  --hover-overlay: rgba(247,244,237,0.05);
+  --text: rgba(247,244,237,0.93);
+  --text-secondary: rgba(247,244,237,0.50);
+  --text-muted: rgba(247,244,237,0.30);
+  --accent: #F5B32C;
+  --accent-hover: #FFC44D;
+  --accent-light: rgba(245,179,44,0.15);
+  --accent-amber: #FFD873;
+  --on-accent: #12100E;     /* ink on gold, never white */
+  --gold: #F5B32C;
+  --on-gold: #12100E;
+  --gold-soft: #FFD873;
+  --violet: #8B6BFF;
+  --violet-light: rgba(139,107,255,0.16);
+  --status-todo: #8C8574; --status-active: #F5B32C; --status-blocked: #E85359;
+  --status-review: #8B6BFF; --status-done: #46B77E; --status-deferred: #5A5446; --status-cancelled: #423D33;
+  --priority-critical: #E85359; --priority-high: #F5B32C; --priority-medium: #8C8574; --priority-low: #6A6455;
+  --heat-0: rgba(247,244,237,0.06); --heat-1: #2A2418; --heat-2: #6B5316; --heat-3: #A87D14; --heat-4: #F5B32C;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.35);
   --shadow: 0 2px 8px rgba(0,0,0,0.45);
   --shadow-lg: 0 6px 20px rgba(0,0,0,0.55);
@@ -2339,6 +2384,7 @@ body {
   --text-muted: rgba(241,245,249,0.32);
   --accent: #818CF8;
   --accent-hover: #93A0FF;
+    --on-accent: #0B1120;   /* light indigo needs ink, not white */
   --accent-light: rgba(129,140,248,0.16);
   --accent-amber: #FBBF24;
   --status-todo: #94A3B8; --status-active: #60A5FA; --status-blocked: #F87171;
@@ -2391,6 +2437,7 @@ body {
   --text-muted: rgba(240,244,252,0.32);
   --accent: #C9A24A;            /* aged gold */
   --accent-hover: #D8B25C;
+    --on-accent: #070C16;   /* aged gold needs ink, not white */
   --accent-light: rgba(201,162,74,0.16);
   --accent-amber: #D8B25C;
   --status-todo: #8A93A6; --status-active: #5B8AD6; --status-blocked: #E0664A;
@@ -2545,7 +2592,7 @@ body {
   border: none;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--font);
   font-size: 12px;
   font-weight: 600;

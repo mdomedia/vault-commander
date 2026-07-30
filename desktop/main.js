@@ -104,7 +104,7 @@ function createWindow() {
     height: 840,
     minWidth: 940,
     minHeight: 600,
-    backgroundColor: '#EAE3D5',
+    backgroundColor: '#E8E5DB',  // Brass bone — matches --bg, so no flash on launch
     title: 'Vault Commander',
     show: false,
     titleBarStyle: 'hiddenInset',

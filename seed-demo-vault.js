@@ -36,17 +36,17 @@ function sanitize(t) {
 
 // --- demo content (fictional) ----------------------------------------------
 const projects = [
-  { key: 'lighthouse', title: 'Lighthouse Coffee — Rebrand', color: '#5E8AA0', icon: '☕',
+  { key: 'lighthouse', title: 'Lighthouse Coffee — Rebrand', color: '#4C8FB5', icon: '☕',
     desc: 'Brand refresh + new marketing site for a neighborhood roaster.' },
-  { key: 'studio', title: 'Studio Ops', color: '#C8862E', icon: '🛠',
+  { key: 'studio', title: 'Studio Ops', color: '#B07D06', icon: '🛠',
     desc: 'Keeping the studio running — proposals, invoices, content.' },
-  { key: 'product', title: 'Product Roadmap', color: '#8B7CF7', icon: '🚀',
+  { key: 'product', title: 'Product Roadmap', color: '#6B4EF0', icon: '🚀',
     desc: 'The indie app. Ship the beta, then earn the price ladder.' },
-  { key: 'home', title: 'Home & Life', color: '#7E9A5C', icon: '🏡',
+  { key: 'home', title: 'Home & Life', color: '#3F9E6C', icon: '🏡',
     desc: 'The stuff that keeps everyday life running.' },
-  { key: 'health', title: 'Health & Training', color: '#B5613A', icon: '🏃',
+  { key: 'health', title: 'Health & Training', color: '#F0A81E', icon: '🏃',
     desc: 'Half-marathon build and eating like an adult.' },
-  { key: 'learning', title: 'Reading & Learning', color: '#A8987E', icon: '📚',
+  { key: 'learning', title: 'Reading & Learning', color: '#9A9384', icon: '📚',
     desc: 'Books, courses, and the monthly review habit.' },
 ];
 

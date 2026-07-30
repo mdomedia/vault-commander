@@ -28,7 +28,46 @@ function isDueToday(due) {
 
 const STATUS_ORDER = ['blocked', 'active', 'review', 'todo', 'done', 'deferred', 'cancelled'];
 const STATUS_LABELS = { todo: 'To Do', active: 'Active', blocked: 'Blocked', review: 'Review', done: 'Done', deferred: 'Deferred', cancelled: 'Cancelled' };
-const STATUS_COLORS = { todo: '#A8987E', active: '#5E8AA0', blocked: '#C0553A', review: '#C8862E', done: '#7E9A5C', deferred: '#C9BCA4', cancelled: '#DCD2BE' };
+// Seeded from the Brass light palette, then refreshed from CSS whenever the
+// theme changes. These values reach the DOM as inline styles on kanban column
+// rules, status dots and stat pills, so a hard-coded copy would keep painting
+// the old palette after a retheme while the stylesheet moved on — the rebrand
+// would look half-applied and nothing would error.
+const STATUS_COLORS = { todo: '#9A9384', active: '#E0A012', blocked: '#D64545', review: '#6B4EF0', done: '#3F9E6C', deferred: '#C4BEB0', cancelled: '#DAD5C8' };
+
+// Same story for the brand and priority colours: they reach the DOM as inline
+// styles on KPI dots, priority chips and work-stream swatches.
+const PALETTE = {
+  gold: '#F0A81E', accent: '#926500',
+  critical: '#D64545', high: '#E0A012', medium: '#9A9384', low: '#BAB4A5',
+  onLight: '#1C1A14', onDark: '#FBFAF6',
+};
+
+/** Pull the live palette out of CSS so inline styles follow the theme.
+ *  Reads from <body>, not <html>: applyTheme() sets data-theme/data-mode on the
+ *  body, so the theme blocks resolve there. documentElement would only ever see
+ *  the :root defaults and every theme but Brass-light would read stale. */
+function refreshPalette() {
+  const cs = getComputedStyle(document.body);
+  // '' means the token is missing; #RRGGBB is required because callers
+  // concatenate an alpha suffix onto these (STATUS_COLORS[x] + '18').
+  const read = (name, fallback) => {
+    const v = cs.getPropertyValue(name).trim();
+    return /^#[0-9a-f]{6}$/i.test(v) ? v : fallback;
+  };
+  for (const key of Object.keys(STATUS_COLORS)) {
+    STATUS_COLORS[key] = read(`--status-${key}`, STATUS_COLORS[key]);
+  }
+  PALETTE.gold   = read('--gold', PALETTE.gold);
+  PALETTE.accent = read('--accent', PALETTE.accent);
+  for (const p of ['critical', 'high', 'medium', 'low']) {
+    PALETTE[p] = read(`--priority-${p}`, PALETTE[p]);
+  }
+}
+
+/** Colours for the work-stream swatches: brand-led, then spaced around the
+ *  wheel so adjacent streams stay distinguishable. */
+const STREAM_COLORS = ['#F0A81E', '#6B4EF0', '#3F9E6C', '#D64545', '#B07D06', '#4C8FB5', '#926500', '#8C8574'];
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const KANBAN_STATUSES = ['todo', 'active', 'review', 'blocked'];
 
@@ -47,7 +86,7 @@ const state = {
   sortAsc: true,
   dragTaskId: null,
   // theming: independent axes — color identity, light/dark, and the Commander UX flip
-  themeName: 'sandstone',   // sandstone | slate | midnight
+  themeName: 'brass',       // brass | slate | midnight
   mode: 'light',            // light | dark | system
   commander: false,         // master UX flip: mascot + personality + gamification
   undoStack: [],            // [{label, undoFn}] — reversible actions
@@ -69,7 +108,7 @@ const SORT_OPTIONS = [
 ];
 
 const THEMES = [
-  { id: 'sandstone', name: 'Sandstone', desc: 'Warm paper — clay, linen & sand', swatch: ['#EAE3D5', '#B5613A', '#FEFCF8', '#C8862E'] },
+  { id: 'brass',     name: 'Brass',     desc: 'Bone, ink and gold — the house colours', swatch: ['#E8E5DB', '#F0A81E', '#FBFAF6', '#6B4EF0'] },
   { id: 'slate',     name: 'Slate',     desc: 'Crisp & cool — maximum readability', swatch: ['#EEF1F5', '#4F46E5', '#FFFFFF', '#3B82F6'] },
   { id: 'midnight',  name: 'Midnight',  desc: 'Premium navy & aged gold', swatch: ['#0D1626', '#C9A24A', '#131F33', '#5B8AD6'] },
 ];
@@ -131,7 +170,11 @@ function loadPrefs() {
     if (p.hideDone !== undefined) state.hideDone = p.hideDone;
     if (p.hideDeferred !== undefined) state.hideDeferred = p.hideDeferred;
     if (p.hideCancelled !== undefined) state.hideCancelled = p.hideCancelled;
-    if (['sandstone','slate','midnight'].includes(p.themeName)) state.themeName = p.themeName;
+    // 'sandstone' was the old warm-clay default, replaced by Brass. Map it
+    // forward rather than letting the whitelist reject it, which would silently
+    // reset an existing user's theme on their next launch.
+    if (p.themeName === 'sandstone') p.themeName = 'brass';
+    if (['brass','slate','midnight'].includes(p.themeName)) state.themeName = p.themeName;
     if (['light','dark','system'].includes(p.mode)) state.mode = p.mode;
     if (typeof p.commander === 'boolean') state.commander = p.commander;
     if (p.kanbanSort && typeof p.kanbanSort === 'object') state.kanbanSort = p.kanbanSort;
@@ -157,6 +200,9 @@ function applyTheme() {
   body.setAttribute('data-theme', state.themeName);
   body.setAttribute('data-mode', resolvedMode());
   body.setAttribute('data-commander', state.commander ? 'on' : 'off');
+  // The attributes above are what select the palette, so re-read the status
+  // colours now that they resolve, before anything renders with them.
+  refreshPalette();
   // header quick light/dark toggle reflects the resolved appearance
   const mt = document.getElementById('mode-toggle');
   if (mt) {
@@ -469,7 +515,7 @@ function renderStats() {
     <div class="stat-pill"><span class="dot" style="background:${STATUS_COLORS.active}"></span>${active} active</div>
     <div class="stat-pill"><span class="dot" style="background:${STATUS_COLORS.blocked}"></span>${blocked} blocked</div>
     <div class="stat-pill"><span class="dot" style="background:${STATUS_COLORS.todo}"></span>${todo} todo</div>
-    <div class="stat-pill"><span class="dot" style="background:#C8862E"></span>${dueToday} due today</div>
+    <div class="stat-pill"><span class="dot" style="background:${PALETTE.gold}"></span>${dueToday} due today</div>
   `;
 }
 
@@ -774,21 +820,21 @@ async function renderDashboard() {
       ? `<span class="dash-streak">${state.commander ? '🔥 ' : ''}${stats.streak}</span>`
       : '<span style="color:var(--text-secondary)">—</span>';
   const overdueIcon = stats.overdue === 0
-    ? '<span style="color:#7E9A5C">✓</span>'
-    : `<span class="kpi-dot" style="background:#C0553A"></span>`;
+    ? `<span style="color:${STATUS_COLORS.done}">✓</span>`
+    : `<span class="kpi-dot" style="background:${STATUS_COLORS.blocked}"></span>`;
 
   const kpiHtml = `
     <div class="dash-kpi-row">
       <div class="dash-kpi">
-        <div class="dash-kpi-value"><span class="kpi-dot" style="background:#5E8AA0"></span>${activeCount}</div>
+        <div class="dash-kpi-value"><span class="kpi-dot" style="background:${STATUS_COLORS.active}"></span>${activeCount}</div>
         <div class="dash-kpi-label">Active</div>
       </div>
       <div class="dash-kpi">
-        <div class="dash-kpi-value"><span class="kpi-dot" style="background:#C0553A"></span>${stats.statusBreakdown.blocked || 0}</div>
+        <div class="dash-kpi-value"><span class="kpi-dot" style="background:${STATUS_COLORS.blocked}"></span>${stats.statusBreakdown.blocked || 0}</div>
         <div class="dash-kpi-label">Blocked</div>
       </div>
       <div class="dash-kpi">
-        <div class="dash-kpi-value"><span class="kpi-dot" style="background:#C8862E"></span>${stats.dueToday}</div>
+        <div class="dash-kpi-value"><span class="kpi-dot" style="background:${PALETTE.gold}"></span>${stats.dueToday}</div>
         <div class="dash-kpi-label">Due Today</div>
       </div>
       <div class="dash-kpi">
@@ -796,7 +842,7 @@ async function renderDashboard() {
         <div class="dash-kpi-label">Overdue</div>
       </div>
       <div class="dash-kpi">
-        <div class="dash-kpi-value"><span class="kpi-dot" style="background:#7E9A5C"></span>${completedThisWeek}</div>
+        <div class="dash-kpi-value"><span class="kpi-dot" style="background:${STATUS_COLORS.done}"></span>${completedThisWeek}</div>
         <div class="dash-kpi-label">Done This Week</div>
       </div>
       <div class="dash-kpi">
@@ -838,7 +884,7 @@ async function renderDashboard() {
     const count = stats.statusBreakdown[s] || 0;
     if (count === 0) return;
     const pct = (count / totalForBar) * 100;
-    const color = STATUS_COLORS[s] || '#A8987E';
+    const color = STATUS_COLORS[s] || STATUS_COLORS.todo;
     statusSegments += `<div class="dash-status-bar-seg" style="width:${pct}%;background:${color}" title="${STATUS_LABELS[s]}: ${count}"></div>`;
     statusLegend += `<div class="dash-status-legend-item"><span class="dash-status-legend-dot" style="background:${color}"></span>${STATUS_LABELS[s]} ${count}</div>`;
   });
@@ -1089,11 +1135,11 @@ function contrastText(hex) {
   const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   // relative luminance
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return lum > 0.62 ? '#2A1F14' : '#FBF6EC';
+  return lum > 0.62 ? PALETTE.onLight : PALETTE.onDark;
 }
 
 function renderKanbanCard(t) {
-  const pColor = t.projectColor || '#A8987E';
+  const pColor = t.projectColor || STATUS_COLORS.todo;
 
   // Project label — solid colored badge with contrast-safe text
   const projectBadge = t.projectName
@@ -1103,8 +1149,8 @@ function renderKanbanCard(t) {
   // Priority — secondary tinted pill with a dot (skip medium)
   let priBadge = '';
   if (t.priority && t.priority !== 'medium') {
-    const priColors = { critical: '#BC4A2E', high: '#C8862E', low: '#B3A488' };
-    const c = priColors[t.priority] || '#97876B';
+    const priColors = { critical: PALETTE.critical, high: PALETTE.high, low: PALETTE.low };
+    const c = priColors[t.priority] || PALETTE.medium;
     priBadge = `<span class="kc-label kc-label-pri" style="background:${c}1F;color:${c}"><span class="kc-pri-dot"></span>${t.priority.toUpperCase()}</span>`;
   }
 
@@ -1322,7 +1368,7 @@ function renderTable() {
         </thead>
         <tbody>
           ${tasks.map(t => {
-            const pColor = t.projectColor || '#A8987E';
+            const pColor = t.projectColor || STATUS_COLORS.todo;
             const statusBg = STATUS_COLORS[t.status] + '18';
             const statusColor = STATUS_COLORS[t.status];
             const prioColor = t.priority === 'critical' ? 'var(--priority-critical)'
@@ -1447,7 +1493,7 @@ function renderTimeline() {
       const endIdx = dayToIdx[end] ?? startIdx;
       const left = startIdx * 34;
       const width = Math.max((endIdx - startIdx + 1) * 34 - 4, 6);
-      const barColor = (isOverdue(t.due) && t.status !== 'done') ? '#C0553A' : (g.project.color || '#B5613A');
+      const barColor = (isOverdue(t.due) && t.status !== 'done') ? STATUS_COLORS.blocked : (g.project.color || PALETTE.gold);
       const overdueCls = (isOverdue(t.due) && t.status !== 'done') ? ' overdue' : '';
 
       rows += `<div class="timeline-row" data-id="${esc(t.id)}">
@@ -1505,7 +1551,7 @@ function renderFocus() {
   const renderList = (items, emptyMsg = 'Nothing here') => {
     if (items.length === 0) return `<div class="focus-empty">${emptyMsg}</div>`;
     return items.map(t => {
-      const pColor = t.projectColor || '#A8987E';
+      const pColor = t.projectColor || STATUS_COLORS.todo;
       let meta = '';
       if (t.due) {
         let cls = 'badge-due';
@@ -1525,7 +1571,7 @@ function renderFocus() {
   };
 
   let streamsHtml = '';
-  const streamColors = ['#B5613A','#C8862E','#5E8AA0','#7E9A5C','#9C6B4F','#C0553A','#A8862E','#6E8A8F'];
+  const streamColors = STREAM_COLORS;
   let streamIdx = 0;
   Object.entries(streams).sort((a, b) => a[0].localeCompare(b[0])).forEach(([domain, items]) => {
     const sColor = streamColors[streamIdx % streamColors.length];
@@ -1549,7 +1595,7 @@ function renderFocus() {
       </div>
       <div class="focus-section">
         <div class="focus-section-header" style="color:#5E8AA0">
-          <span class="dot" style="background:#5E8AA0"></span>
+          <span class="dot" style="background:${STATUS_COLORS.active}"></span>
           Active Work
           <span class="count">${active.length}</span>
         </div>
@@ -1557,7 +1603,7 @@ function renderFocus() {
       </div>
       <div class="focus-section">
         <div class="focus-section-header" style="color:#C0553A">
-          <span class="dot" style="background:#C0553A"></span>
+          <span class="dot" style="background:${STATUS_COLORS.blocked}"></span>
           Blocked
           <span class="count">${blocked.length}</span>
         </div>
@@ -1565,7 +1611,7 @@ function renderFocus() {
       </div>
       <div class="focus-section full-width">
         <div class="focus-section-header" style="color:#C8862E">
-          <span class="dot" style="background:#C8862E"></span>
+          <span class="dot" style="background:${PALETTE.gold}"></span>
           Next Up — High Priority
           <span class="count">${nextUp.length}</span>
         </div>

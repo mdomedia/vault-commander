@@ -12,10 +12,14 @@
   <header class="header">
     <div class="header-left">
       <div class="app-logo">
-        <svg class="app-logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" fill="currentColor" opacity="0.15"/>
-          <path d="M12 2L3 7v6c0 5.25 3.83 10.16 9 11.38C17.17 23.16 21 18.25 21 13V7l-9-5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Brass mark: a gold chip with the V of Vault cut out of it. A
+             letterform on purpose — the first attempt used a bar over a
+             chevron, which is the universal download glyph, an unfortunate
+             thing to wear on a downloadable app. Fixed colours rather than
+             currentColor, so the identity holds across all three themes. -->
+        <svg class="app-logo-icon" width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="#F0A81E"/>
+          <path d="M9 8.5L13.6 8.5L16 18.2L18.4 8.5L23 8.5L18.1 24L13.9 24Z" fill="#1C1A14"/>
         </svg>
         <span class="app-name">Vault Commander</span>
       </div>
